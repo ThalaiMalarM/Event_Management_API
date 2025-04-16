@@ -5,7 +5,8 @@ const path = require("path");
 const fs = require("fs");
 const cloudinary = require("../utils/cloudinary");
 const sendEmail = require("../utils/sendEmail");
-const sendSMS = require('../utils/sendSMS');
+// const sendSMS = require('../utils/sendSMS');
+const { Parser } = require("json2csv");
 
 exports.createEvent = async (req, res) => {
     try {
@@ -133,10 +134,7 @@ exports.registerForEvent = async (req, res) => {
                 },
             ]
         );
-        await sendSMS(
-            user.phone, // make sure phone number is saved with country code like +9199xxxx
-            `Hi ${user.name}, you're registered for ${event.title}. Show your QR code at check-in.`
-          );
+        
         res.status(200).json({ message: "Registration success..", qrCodeUrl: result.secure_url });
     }
     catch (error) {
@@ -182,6 +180,31 @@ exports.checkIn = async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.getParticipantList = async (req, res) => {
+    try{
+        const eventId = req.params.eventId;
+        const event = await Event.findById(eventId).populate("registrations", "name email phone");
+        if (!event) return res.status(404).json({message: "Event not found"});
+        if (req.user.role !== "admin" && !(req.user.role === "organizer" && event.createdBy.toString() === req.user._id.toString())){
+            return res.status(403).json({message: "Access denied"});
+        } 
+        const participants = event.registrations;
+        if (req.query.export === "csv"){
+            const fields = ["name", "email", "phone"];
+            const parser = new Parser({fields});
+            const csv = parser.parse(participants);
+            res.header("Content-Type", "text/csv");
+            res.attachment("participants.csv");
+            return res.send(csv);
+        }
+        res.status(200).json({ participants });
+    }
+    catch(error){
+        console.error(error);
+        res.status(500).json({message: "Server Error"});
     }
 };
 

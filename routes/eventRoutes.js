@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
      createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, registerForEvent, getRegisteredUsers,
-     checkIn
+     checkIn, getParticipantList
     } = require("../controllers/eventController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -15,5 +15,6 @@ router.delete("/:id", authMiddleware, deleteEvent);
 router.post("/:id/register", authMiddleware, registerForEvent);
 router.get("/:id/registrations", authMiddleware, getRegisteredUsers);
 router.post("/check-in", checkIn);
+router.get("/participants/:eventId", authMiddleware, getParticipantList);
 
 module.exports = router;

@@ -4,6 +4,8 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
+require("./cron/remainder");
 connectDB();
 
 const app = express();
@@ -17,6 +19,7 @@ app.get("/", (req, res)=>{
 
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 const PORT = 5000;
 app.listen(PORT, ()=>{
